@@ -1,16 +1,29 @@
+use clap::Parser;
 use std::{error::Error, fs};
 
-pub fn run(target: String, file_path: String) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(file_path)?;
+#[derive(Parser)]
+#[command(name = "MyApp")]
+#[command(version = "1.0")]
+#[command(about = "Mini version of grep")]
+pub struct Args {
+    pub target: String,
+    pub file_path: String,
 
-    for line in search(&target, &contents) {
+    #[arg(short, long)]
+    pub ignore_case: bool,
+}
+
+pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
+    let contents = fs::read_to_string(args.file_path)?;
+
+    for line in search(&args.target, &contents, args.ignore_case) {
         println!("{line}");
     }
 
     Ok(())
 }
 
-fn search<'a>(target: &str, contents: &'a str) -> Vec<&'a str> {
+fn search<'a>(target: &str, contents: &'a str, case_sensitive: bool) -> Vec<&'a str> {
     let mut output = Vec::new();
 
     for line in contents.lines() {
