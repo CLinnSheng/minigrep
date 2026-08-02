@@ -16,34 +16,32 @@ pub struct Args {
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(args.file_path)?;
 
-    let res = if args.ignore_case {
-        search_case_insensitive(&args.target, &contents)
-    } else {
-        search_case_sensitive(&args.target, &contents)
-    };
-
-    for r in res {
+    for r in search(&args.target, &contents, args.ignore_case) {
         println!("{r}");
     }
 
     Ok(())
 }
 
-fn search_case_sensitive<'a>(target: &str, contents: &'a str) -> Vec<&'a str> {
-    contents
-        .lines()
-        .filter(|line| line.contains(target))
-        .collect()
-}
+fn search<'a>(
+    target: &str,
+    contents: &'a str,
+    case_sensitive: bool,
+) -> impl Iterator<Item = &'a str> {
+    // Not case sensitive/ignore case just simply change all to lowercase and compare
+    let target = if !case_sensitive {
+        target.to_lowercase()
+    } else {
+        target.to_string()
+    };
 
-fn search_case_insensitive<'a>(target: &str, contents: &'a str) -> Vec<&'a str> {
-    // Simply make every case to lowercase and match with lowercase
-    let target = target.to_lowercase();
-
-    contents
-        .lines()
-        .filter(|line| line.to_lowercase().contains(&target))
-        .collect()
+    contents.lines().filter(move |line| {
+        if !case_sensitive {
+            line.to_lowercase().contains(&target)
+        } else {
+            line.contains(&target)
+        }
+    })
 }
 
 #[cfg(test)]
@@ -60,7 +58,7 @@ Pick three.";
 
         assert_eq!(
             vec!["safe, fast, productive"],
-            search_case_sensitive(target, contents)
+            search(target, contents, true).collect::<Vec<&str>>()
         );
     }
 
@@ -75,7 +73,7 @@ Trust Me.";
 
         assert_eq!(
             vec!["Rust:", "Trust Me."],
-            search_case_insensitive(target, contents)
+            search(target, contents, false).collect::<Vec<&str>>()
         );
     }
 }
