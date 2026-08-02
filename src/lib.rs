@@ -30,29 +30,20 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
 }
 
 fn search_case_sensitive<'a>(target: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut output = Vec::new();
-
-    for line in contents.lines() {
-        if line.contains(target) {
-            output.push(line);
-        }
-    }
-
-    output
+    contents
+        .lines()
+        .filter(|line| line.contains(target))
+        .collect()
 }
 
 fn search_case_insensitive<'a>(target: &str, contents: &'a str) -> Vec<&'a str> {
     // Simply make every case to lowercase and match with lowercase
     let target = target.to_lowercase();
-    let mut output = Vec::new();
 
-    for line in contents.lines() {
-        if line.to_lowercase().contains(&target) {
-            output.push(line);
-        }
-    }
-
-    output
+    contents
+        .lines()
+        .filter(|line| line.to_lowercase().contains(&target))
+        .collect()
 }
 
 #[cfg(test)]
